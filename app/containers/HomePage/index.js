@@ -9,17 +9,30 @@
  * the linting exception.
  */
 
-import React from 'react';
-import { FormattedMessage } from 'react-intl';
-import messages from './messages';
+import React, { Component } from 'react';
+import * as firebase from 'firebase';
 
-export default class HomePage extends React.Component { // eslint-disable-line react/prefer-stateless-function
-
+export default class HomePage extends Component { // eslint-disable-line react/prefer-stateless-function
+  constructor(props) {
+    super(props);
+    const config = {
+      apiKey: 'AIzaSyCRQIwH6B1XvTJJGoltQwymZx-CU3mxyTo',
+      authDomain: 'starter-1bab0.firebaseapp.com',
+      databaseURL: 'https://starter-1bab0.firebaseio.com',
+      storageBucket: 'starter-1bab0.appspot.com',
+    };
+    firebase.initializeApp(config);
+    this.state = {
+      auth: firebase.auth(),
+      database: firebase.database(),
+      storage: firebase.storage(),
+    };
+  }
   render() {
     return (
-      <h1>
-        <FormattedMessage {...messages.header} />
-      </h1>
+      <div>
+        <h3>Starter App</h3>
+      </div>
     );
   }
 }
