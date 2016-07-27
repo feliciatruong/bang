@@ -11,6 +11,7 @@
 
 import React, { Component } from 'react';
 import * as firebase from 'firebase';
+import { Button } from 'react-bootstrap';
 
 export default class HomePage extends Component { // eslint-disable-line react/prefer-stateless-function
   constructor(props) {
@@ -32,6 +33,7 @@ export default class HomePage extends Component { // eslint-disable-line react/p
     return (
       <div>
         <h3>Starter App</h3>
+        <Button bsStyle="primary">Test</Button>
       </div>
     );
   }
