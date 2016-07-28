@@ -1,6 +1,11 @@
 import React, { Component } from 'react';
 import * as firebase from 'firebase';
+<<<<<<< 850bf64499f73e4619b08090680b3fb8e50f2670
 import { Button } from 'react-bootstrap';
+=======
+import { Button, FormGroup, FormControl } from 'react-bootstrap';
+import MessageList from './messages.js';
+>>>>>>> Load message history from database
 
 export default class HomePage extends Component { // eslint-disable-line react/prefer-stateless-function
   constructor(props) {
@@ -18,6 +23,7 @@ export default class HomePage extends Component { // eslint-disable-line react/p
       database: firebase.database(),
       loggedIn: false,
       message: '',
+      messages: [],
       storage: firebase.storage(),
       username: '',
     };
