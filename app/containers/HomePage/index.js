@@ -59,6 +59,20 @@ export default class HomePage extends Component { // eslint-disable-line react/p
     this.setState({ message: event.target.value });
   }
 
+  saveMessage = (event) => {
+    event.preventDefault();
+    const { database, loggedIn, message, username } = this.state;
+    if (message && loggedIn) {
+      // Add a new message entry to the Firebase Database.
+      database.ref('messages').push({
+        name: username,
+        text: message,
+      }).then(() => {
+        this.setState({ message: '' });
+      });
+    }
+  }
+
   render() {
     const { loggedIn, message, username } = this.state;
     return (
@@ -79,13 +93,14 @@ export default class HomePage extends Component { // eslint-disable-line react/p
           <FormGroup>
             <FormControl
               type="text"
-              value={this.state.value}
+              value={message}
               placeholder="Enter message"
               onChange={this.handleChange}
             />
             <Button
               disabled={!message}
               type="submit"
+              onClick={this.saveMessage}
               bsStyle="primary"
             >
               Send
