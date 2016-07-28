@@ -1,14 +1,3 @@
-    /*
- * HomePage
- *
- * This is the first thing users see of our App, at the '/' route
- *
- * NOTE: while this component should technically be a stateless functional
- * component (SFC), hot reloading does not currently support SFCs. If hot
- * reloading is not a neccessity for you then you can refactor it and remove
- * the linting exception.
- */
-
 import React, { Component } from 'react';
 import * as firebase from 'firebase';
 import { Button } from 'react-bootstrap';
@@ -36,7 +25,7 @@ export default class HomePage extends Component { // eslint-disable-line react/p
   componentWillMount() {
     const { auth } = this.state;
     // Initiates Firebase auth and listen to auth state changes.
-    auth.onAuthStateChanged(this.onAuthStateChanged.bind(this));
+    auth.onAuthStateChanged(this.onAuthStateChanged);
   }
 
   // Triggers when the auth state change for instance when the user signs-in or signs-out.
