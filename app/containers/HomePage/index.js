@@ -1,4 +1,4 @@
-/*
+    /*
  * HomePage
  *
  * This is the first thing users see of our App, at the '/' route
@@ -50,13 +50,15 @@ export default class HomePage extends Component { // eslint-disable-line react/p
     }
   }
 
-  signIn = (auth) => {
+  signIn = () => {
+    const { auth } = this.state;
     // Sign in Firebase using popup auth and Google as the identity provider.
     const provider = new firebase.auth.GoogleAuthProvider();
     auth.signInWithPopup(provider);
   }
 
-  signOut = (auth) => {
+  signOut = () => {
+    const { auth } = this.state;
     // Sign out of Firebase.
     auth.signOut();
     this.setState({ loggedIn: false });
@@ -64,16 +66,16 @@ export default class HomePage extends Component { // eslint-disable-line react/p
 
 
   render() {
-    const { auth, loggedIn, username } = this.state;
+    const { loggedIn, username } = this.state;
     return (
       <div>
         <h3>Starter App</h3>
         <div id="user-container">
           <h6 hidden={!loggedIn}>{username}</h6>
-          <Button hidden={!loggedIn} onClick={() => this.signOut(auth)}>
+          <Button hidden={!loggedIn} onClick={this.signOut}>
             Sign-out
           </Button>
-          <Button hidden={loggedIn} onClick={() => this.signIn(auth)}>
+          <Button hidden={loggedIn} onClick={this.signIn}>
             <i className="material-icons">account_circle</i>Sign-in with Google
           </Button>
         </div>
