@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import * as firebase from 'firebase';
 import { Button, FormGroup, FormControl } from 'react-bootstrap';
+import MessageList from './messages.js';
 
 export default class HomePage extends Component { // eslint-disable-line react/prefer-stateless-function
   constructor(props) {
@@ -18,6 +19,7 @@ export default class HomePage extends Component { // eslint-disable-line react/p
       database: firebase.database(),
       loggedIn: false,
       message: '',
+      messages: [],
       storage: firebase.storage(),
       username: '',
     };
@@ -73,8 +75,24 @@ export default class HomePage extends Component { // eslint-disable-line react/p
     }
   }
 
+  loadMessages() {
+    const { database, messages } = this.state;
+    const messagesRef = database.ref('messages');
+    messagesRef.off();
+    messagesRef.limitToLast(12).on('child_added', (data) => {
+      const val = data.val();
+      messages.push({ key: data.key, name: val.name, text: val.text });
+      this.setState({ messages });
+    });
+    messagesRef.limitToLast(12).on('child_changed', (data) => {
+      const val = data.val();
+      messages.push({ key: data.key, name: val.name, text: val.text });
+      this.setState({ messages });
+    });
+  }
+
   render() {
-    const { loggedIn, message, username } = this.state;
+    const { loggedIn, message, messages, username } = this.state;
     return (
       <div>
         <h3>Starter App</h3>
@@ -89,6 +107,7 @@ export default class HomePage extends Component { // eslint-disable-line react/p
         </div>
         <div>
           <div id="messages">
+            <MessageList items={messages} />
           </div>
           <FormGroup>
             <FormControl
