@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import * as firebase from 'firebase';
-import { Button } from 'react-bootstrap';
+import { Button, FormGroup, FormControl } from 'react-bootstrap';
 
 export default class HomePage extends Component { // eslint-disable-line react/prefer-stateless-function
   constructor(props) {
@@ -17,6 +17,7 @@ export default class HomePage extends Component { // eslint-disable-line react/p
       auth: firebase.auth(),
       database: firebase.database(),
       loggedIn: false,
+      message: '',
       storage: firebase.storage(),
       username: '',
     };
@@ -53,9 +54,13 @@ export default class HomePage extends Component { // eslint-disable-line react/p
     this.setState({ loggedIn: false });
   }
 
+  handleChange = (event) => {
+    event.preventDefault();
+    this.setState({ message: event.target.value });
+  }
 
   render() {
-    const { loggedIn, username } = this.state;
+    const { loggedIn, message, username } = this.state;
     return (
       <div>
         <h3>Starter App</h3>
@@ -67,6 +72,25 @@ export default class HomePage extends Component { // eslint-disable-line react/p
           <Button hidden={loggedIn} onClick={this.signIn}>
             <i className="material-icons">account_circle</i>Sign-in with Google
           </Button>
+        </div>
+        <div>
+          <div id="messages">
+          </div>
+          <FormGroup>
+            <FormControl
+              type="text"
+              value={this.state.value}
+              placeholder="Enter message"
+              onChange={this.handleChange}
+            />
+            <Button
+              disabled={!message}
+              type="submit"
+              bsStyle="primary"
+            >
+              Send
+            </Button>
+          </FormGroup>
         </div>
       </div>
     );
