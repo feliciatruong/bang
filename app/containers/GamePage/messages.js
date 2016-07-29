@@ -6,13 +6,14 @@ export default class MessageList extends Component {
   }
 
   render() {
-    if (!this.props.items) {
+    const { items } = this.props;
+    if (!items) {
       return null;
     }
     return (
       <ul>
         {
-          this.props.items.map((item) =>
+          items.map((item) =>
             <div
               key={item.key}
             >
