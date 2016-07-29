@@ -31,7 +31,6 @@ export default class HomePage extends Component { // eslint-disable-line react/p
         loggedIn: true,
         username: user.displayName,
       });
-      this.loadMessages();
     }
   }
 

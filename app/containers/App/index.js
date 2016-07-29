@@ -13,6 +13,7 @@
 
 import React from 'react';
 import * as firebase from 'firebase';
+import { IndexLink } from 'react-router';
 
 import styles from './styles.css';
 
@@ -36,8 +37,13 @@ export default class App extends React.Component { // eslint-disable-line react/
 
   render() {
     return (
-      <div className={styles.container}>
-        {this.props.children}
+      <div>
+        <IndexLink to="/">
+          <span>Starter</span>
+        </IndexLink>
+        <div className={styles.container}>
+          {this.props.children}
+        </div>
       </div>
     );
   }

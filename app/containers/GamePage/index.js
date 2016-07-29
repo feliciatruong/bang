@@ -22,7 +22,7 @@ export default class RoomPage extends Component {
     };
   }
 
-   componentWillMount() {
+  componentWillMount() {
     const { auth } = this.state;
     // Initiates Firebase auth and listen to auth state changes.
     auth.onAuthStateChanged(this.onAuthStateChanged);
