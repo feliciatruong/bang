@@ -1,11 +1,7 @@
 import React, { Component } from 'react';
 import * as firebase from 'firebase';
-<<<<<<< 850bf64499f73e4619b08090680b3fb8e50f2670
 import { Button } from 'react-bootstrap';
-=======
-import { Button, FormGroup, FormControl } from 'react-bootstrap';
-import MessageList from './messages.js';
->>>>>>> Load message history from database
+import { browserHistory } from 'react-router';
 
 export default class HomePage extends Component { // eslint-disable-line react/prefer-stateless-function
   constructor(props) {
@@ -60,6 +56,10 @@ export default class HomePage extends Component { // eslint-disable-line react/p
     this.setState({ loggedIn: false });
   }
 
+  createRoom() {
+    browserHistory.push('/room');
+  }
+
   render() {
     const { loggedIn, username } = this.state;
     return (
@@ -74,6 +74,9 @@ export default class HomePage extends Component { // eslint-disable-line react/p
             <i className="material-icons">account_circle</i>Sign-in with Google
           </Button>
         </div>
+        <Button bsStyle="primary" onClick={this.createRoom}>
+          Create Room
+        </Button>
       </div>
     );
   }
