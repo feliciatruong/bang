@@ -3,7 +3,7 @@ import * as firebase from 'firebase';
 import { Button, FormGroup, FormControl } from 'react-bootstrap';
 import MessageList from './messages.js';
 
-export default class RoomPage extends Component {
+export default class GamePage extends Component {
 
   static propTypes = {
     params: PropTypes.object,
@@ -17,7 +17,6 @@ export default class RoomPage extends Component {
       loggedIn: false,
       message: '',
       messages: [],
-      storage: firebase.storage(),
       username: '',
     };
   }
@@ -26,6 +25,7 @@ export default class RoomPage extends Component {
     const { auth } = this.state;
     // Initiates Firebase auth and listen to auth state changes.
     auth.onAuthStateChanged(this.onAuthStateChanged);
+    this.loadMessages();
   }
 
   // Triggers when the auth state change for instance when the user signs-in or signs-out.
@@ -35,22 +35,7 @@ export default class RoomPage extends Component {
         loggedIn: true,
         username: user.displayName,
       });
-      this.loadMessages();
     }
-  }
-
-  signIn = () => {
-    const { auth } = this.state;
-    // Sign in Firebase using popup auth and Google as the identity provider.
-    const provider = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithPopup(provider);
-  }
-
-  signOut = () => {
-    const { auth } = this.state;
-    // Sign out of Firebase.
-    auth.signOut();
-    this.setState({ loggedIn: false });
   }
 
   handleChange = (event) => {
@@ -91,19 +76,10 @@ export default class RoomPage extends Component {
   }
 
   render() {
-    const { loggedIn, message, messages, username } = this.state;
+    const { message, messages } = this.state;
     return (
       <div>
         <h3>Game Page</h3>
-        <div id="user-container">
-          <h6 hidden={!loggedIn}>{username}</h6>
-          <Button hidden={!loggedIn} onClick={this.signOut}>
-            Sign-out
-          </Button>
-          <Button hidden={loggedIn} onClick={this.signIn}>
-            <i className="material-icons">account_circle</i>Sign-in with Google
-          </Button>
-        </div>
         <div>
           <div id="messages">
             <MessageList items={messages} />
