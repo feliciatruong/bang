@@ -84,22 +84,23 @@ export default class GamePage extends Component {
           <div id="messages">
             <MessageList items={messages} />
           </div>
-          <FormGroup>
-            <FormControl
-              type="text"
-              value={message}
-              placeholder="Enter message"
-              onChange={this.handleChange}
-            />
-            <Button
-              disabled={!message}
-              type="submit"
-              onClick={this.saveMessage}
-              bsStyle="primary"
-            >
-              Send
-            </Button>
-          </FormGroup>
+          <form onSubmit={this.saveMessage}>
+            <FormGroup>
+              <FormControl
+                type="text"
+                value={message}
+                placeholder="Enter message"
+                onChange={this.handleChange}
+              />
+              <Button
+                disabled={!message}
+                type="submit"
+                bsStyle="primary"
+              >
+                Send
+              </Button>
+            </FormGroup>
+          </form>
         </div>
       </div>
     );

@@ -49,7 +49,6 @@ export default class App extends React.Component { // eslint-disable-line react/
     auth.onAuthStateChanged(this.onAuthStateChanged);
   }
 
-
   componentWillUnmount() {
     firebase.remove();
   }
