@@ -4,16 +4,9 @@ import { Button } from 'react-bootstrap';
 import { browserHistory } from 'react-router';
 
 export default class HomePage extends Component { // eslint-disable-line react/prefer-stateless-function
+
   constructor(props) {
     super(props);
-    // Initialize Firebase
-    const config = {
-      apiKey: 'AIzaSyCRQIwH6B1XvTJJGoltQwymZx-CU3mxyTo',
-      authDomain: 'starter-1bab0.firebaseapp.com',
-      databaseURL: 'https://starter-1bab0.firebaseio.com',
-      storageBucket: 'starter-1bab0.appspot.com',
-    };
-    firebase.initializeApp(config);
     this.state = {
       auth: firebase.auth(),
       database: firebase.database(),

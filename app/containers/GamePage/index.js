@@ -1,9 +1,14 @@
-import React, { Component } from 'react';
+import React, { Component, PropTypes } from 'react';
 import * as firebase from 'firebase';
 import { Button, FormGroup, FormControl } from 'react-bootstrap';
 import MessageList from './messages.js';
 
 export default class RoomPage extends Component {
+
+  static propTypes = {
+    params: PropTypes.object,
+  }
+
   constructor(props) {
     super(props);
     this.state = {
@@ -56,9 +61,10 @@ export default class RoomPage extends Component {
   saveMessage = (event) => {
     event.preventDefault();
     const { database, loggedIn, message, username } = this.state;
+    const { params } = this.props;
     if (message && loggedIn) {
       // Add a new message entry to the Firebase Database.
-      database.ref(this.props.params.rid).push({
+      database.ref(params.rid).push({
         name: username,
         text: message,
       }).then(() => {
@@ -69,7 +75,8 @@ export default class RoomPage extends Component {
 
   loadMessages() {
     const { database, messages } = this.state;
-    const messagesRef = database.ref(this.props.params.rid);
+    const { params } = this.props;
+    const messagesRef = database.ref(params.rid);
     messagesRef.off();
     messagesRef.limitToLast(12).on('child_added', (data) => {
       const val = data.val();

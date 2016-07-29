@@ -12,6 +12,7 @@
  */
 
 import React from 'react';
+import * as firebase from 'firebase';
 
 import styles from './styles.css';
 
@@ -20,6 +21,18 @@ export default class App extends React.Component { // eslint-disable-line react/
   static propTypes = {
     children: React.PropTypes.node,
   };
+
+  constructor(props) {
+    super(props);
+    // Initialize Firebase
+    const config = {
+      apiKey: 'AIzaSyCRQIwH6B1XvTJJGoltQwymZx-CU3mxyTo',
+      authDomain: 'starter-1bab0.firebaseapp.com',
+      databaseURL: 'https://starter-1bab0.firebaseio.com',
+      storageBucket: 'starter-1bab0.appspot.com',
+    };
+    firebase.initializeApp(config);
+  }
 
   render() {
     return (
