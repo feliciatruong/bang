@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import * as firebase from 'firebase';
-import { Button } from 'react-bootstrap';
+import { Button, FormGroup, FormControl } from 'react-bootstrap';
+import MessageList from './messages.js';
 
 export default class HomePage extends Component { // eslint-disable-line react/prefer-stateless-function
   constructor(props) {
@@ -17,6 +18,8 @@ export default class HomePage extends Component { // eslint-disable-line react/p
       auth: firebase.auth(),
       database: firebase.database(),
       loggedIn: false,
+      message: '',
+      messages: [],
       storage: firebase.storage(),
       username: '',
     };
@@ -53,9 +56,43 @@ export default class HomePage extends Component { // eslint-disable-line react/p
     this.setState({ loggedIn: false });
   }
 
+  handleChange = (event) => {
+    event.preventDefault();
+    this.setState({ message: event.target.value });
+  }
+
+  saveMessage = (event) => {
+    event.preventDefault();
+    const { database, loggedIn, message, username } = this.state;
+    if (message && loggedIn) {
+      // Add a new message entry to the Firebase Database.
+      database.ref('messages').push({
+        name: username,
+        text: message,
+      }).then(() => {
+        this.setState({ message: '' });
+      });
+    }
+  }
+
+  loadMessages() {
+    const { database, messages } = this.state;
+    const messagesRef = database.ref('messages');
+    messagesRef.off();
+    messagesRef.limitToLast(12).on('child_added', (data) => {
+      const val = data.val();
+      messages.push({ key: data.key, name: val.name, text: val.text });
+      this.setState({ messages });
+    });
+    messagesRef.limitToLast(12).on('child_changed', (data) => {
+      const val = data.val();
+      messages.push({ key: data.key, name: val.name, text: val.text });
+      this.setState({ messages });
+    });
+  }
 
   render() {
-    const { loggedIn, username } = this.state;
+    const { loggedIn, message, messages, username } = this.state;
     return (
       <div>
         <h3>Starter App</h3>
@@ -67,6 +104,27 @@ export default class HomePage extends Component { // eslint-disable-line react/p
           <Button hidden={loggedIn} onClick={this.signIn}>
             <i className="material-icons">account_circle</i>Sign-in with Google
           </Button>
+        </div>
+        <div>
+          <div id="messages">
+            <MessageList items={messages} />
+          </div>
+          <FormGroup>
+            <FormControl
+              type="text"
+              value={message}
+              placeholder="Enter message"
+              onChange={this.handleChange}
+            />
+            <Button
+              disabled={!message}
+              type="submit"
+              onClick={this.saveMessage}
+              bsStyle="primary"
+            >
+              Send
+            </Button>
+          </FormGroup>
         </div>
       </div>
     );
