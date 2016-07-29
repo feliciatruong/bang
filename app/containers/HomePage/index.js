@@ -57,7 +57,9 @@ export default class HomePage extends Component { // eslint-disable-line react/p
   }
 
   createRoom() {
-    browserHistory.push('/room');
+    const uid = new Date().valueOf();
+    const sid = String(uid);
+    browserHistory.push(`/room/${sid}`);
   }
 
   render() {

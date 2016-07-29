@@ -42,6 +42,14 @@ export default function createRoutes() {
           .catch(errorLoading);
       },
     }, {
+      path: '/room/:rid',
+      name: 'room',
+      getComponent(nextState, cb) {
+        System.import('containers/GamePage')
+          .then(loadModule(cb))
+          .catch(errorLoading);
+      },
+    }, {
       path: '*',
       name: 'notfound',
       getComponent(nextState, cb) {
