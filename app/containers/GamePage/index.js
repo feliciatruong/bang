@@ -6,7 +6,9 @@ import MessageList from './messages.js';
 export default class GamePage extends Component {
 
   static propTypes = {
+    loggedIn: PropTypes.bool,
     params: PropTypes.object,
+    username: PropTypes.string,
   }
 
   constructor(props) {
@@ -21,21 +23,12 @@ export default class GamePage extends Component {
     };
   }
 
-  componentWillMount() {
-    const { auth } = this.state;
-    // Initiates Firebase auth and listen to auth state changes.
-    auth.onAuthStateChanged(this.onAuthStateChanged);
+  componentWillReceiveProps(nextProps) {
+    this.setState({
+      loggedIn: nextProps.loggedIn,
+      username: nextProps.username,
+    });
     this.loadMessages();
-  }
-
-  // Triggers when the auth state change for instance when the user signs-in or signs-out.
-  onAuthStateChanged = (user) => {
-    if (user) {
-      this.setState({
-        loggedIn: true,
-        username: user.displayName,
-      });
-    }
   }
 
   handleChange = (event) => {

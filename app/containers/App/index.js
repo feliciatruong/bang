@@ -68,6 +68,7 @@ export default class App extends React.Component { // eslint-disable-line react/
     // Sign in Firebase using popup auth and Google as the identity provider.
     const provider = new firebase.auth.GoogleAuthProvider();
     auth.signInWithPopup(provider);
+    this.setState({ loggedIn: true });
   }
 
   signOut = () => {
@@ -94,7 +95,7 @@ export default class App extends React.Component { // eslint-disable-line react/
           </Button>
         </div>
         <div className={styles.container}>
-          {this.props.children}
+          {React.cloneElement(this.props.children, { loggedIn, username })}
         </div>
       </div>
     );
