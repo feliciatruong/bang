@@ -24,11 +24,11 @@ export default class GamePage extends Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    this.setState({
-      loggedIn: nextProps.loggedIn,
-      username: nextProps.username,
-    });
-    this.loadMessages();
+    if (nextProps.loggedIn) {
+      this.loadMessages();
+    } else {
+      this.setState({ messages: [] });
+    }
   }
 
   handleChange = (event) => {
