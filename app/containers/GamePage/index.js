@@ -5,6 +5,10 @@ import MessageList from './messages.js';
 
 export default class GamePage extends Component {
 
+  static contextTypes = {
+    store: PropTypes.object,
+  }
+
   static propTypes = {
     loggedIn: PropTypes.bool,
     params: PropTypes.object,
@@ -23,12 +27,16 @@ export default class GamePage extends Component {
     };
   }
 
+
+  componentDidMount() {
+    const { store } = this.context;
+    console.log(store.getState());
+  }
+
   componentWillReceiveProps(nextProps) {
-    if (nextProps.loggedIn) {
-      this.loadMessages();
-    } else {
-      this.setState({ messages: [] });
-    }
+    this.setState({
+      loggedIn: nextProps.loggedIn,
+    });
   }
 
   handleChange = (event) => {
