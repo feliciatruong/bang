@@ -17,6 +17,7 @@ export default class GamePage extends Component {
       loggedIn: false,
       message: '',
       messages: [],
+      participants: [],
       username: '',
     };
   }
@@ -25,7 +26,6 @@ export default class GamePage extends Component {
     const { auth } = this.state;
     // Initiates Firebase auth and listen to auth state changes.
     auth.onAuthStateChanged(this.onAuthStateChanged);
-    this.loadMessages();
   }
 
   // Triggers when the auth state change for instance when the user signs-in or signs-out.
@@ -34,8 +34,16 @@ export default class GamePage extends Component {
       this.setState({
         loggedIn: true,
         username: user.displayName,
+        messages: [],
       });
+      this.loadMessages();
     }
+  }
+
+  escapeEmailAddress(email) {
+    if (!email) return false;
+    // Replace '.' (not allowed in a Firebase key) with ',' (not allowed in an email address)
+    return email.toLowerCase().replace(/\./g, ',');
   }
 
   handleChange = (event) => {
@@ -49,7 +57,7 @@ export default class GamePage extends Component {
     const { params } = this.props;
     if (message && loggedIn) {
       // Add a new message entry to the Firebase Database.
-      database.ref(params.rid).push({
+      database.ref(`${params.rid}/messages`).push({
         name: username,
         text: message,
       }).then(() => {
@@ -61,7 +69,7 @@ export default class GamePage extends Component {
   loadMessages() {
     const { database, messages } = this.state;
     const { params } = this.props;
-    const messagesRef = database.ref(params.rid);
+    const messagesRef = database.ref(`${params.rid}/messages`);
     messagesRef.off();
     messagesRef.limitToLast(12).on('child_added', (data) => {
       const val = data.val();
