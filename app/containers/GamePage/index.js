@@ -10,9 +10,7 @@ export default class GamePage extends Component {
   }
 
   static propTypes = {
-    loggedIn: PropTypes.bool,
     params: PropTypes.object,
-    username: PropTypes.string,
   }
 
   constructor(props) {
@@ -20,23 +18,13 @@ export default class GamePage extends Component {
     this.state = {
       auth: firebase.auth(),
       database: firebase.database(),
-      loggedIn: false,
       message: '',
       messages: [],
-      username: '',
     };
   }
 
-
-  componentDidMount() {
-    const { store } = this.context;
-    console.log(store.getState());
-  }
-
-  componentWillReceiveProps(nextProps) {
-    this.setState({
-      loggedIn: nextProps.loggedIn,
-    });
+  componentWillUpdate() {
+    this.loadMessages();
   }
 
   handleChange = (event) => {
@@ -46,12 +34,13 @@ export default class GamePage extends Component {
 
   saveMessage = (event) => {
     event.preventDefault();
-    const { database, loggedIn, message, username } = this.state;
+    const { database, message } = this.state;
     const { params } = this.props;
-    if (message && loggedIn) {
+    const { store } = this.context;
+    if (message && store.getState().login) {
       // Add a new message entry to the Firebase Database.
       database.ref(params.rid).push({
-        name: username,
+        name: store.getState().name,
         text: message,
       }).then(() => {
         this.setState({ message: '' });

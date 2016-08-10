@@ -70,7 +70,6 @@ export default class App extends React.Component { // eslint-disable-line react/
         username: user.displayName,
       });
       store.dispatch({ type: 'LOGIN', name: user.displayName });
-      console.log(store.getState());
     }
   }
 
