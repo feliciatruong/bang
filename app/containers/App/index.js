@@ -15,8 +15,21 @@ import React from 'react';
 import * as firebase from 'firebase';
 import { IndexLink } from 'react-router';
 import { Button } from 'react-bootstrap';
+import { createStore } from 'redux';
+import { Provider } from 'react-redux';
 
 import styles from './styles.css';
+
+const store = createStore((state = { login: false, name: '' }, action) => {
+  switch (action.type) {
+    case 'LOGIN':
+      return Object.assign({}, state, { login: true, name: action.name });
+    case 'LOGOUT':
+      return Object.assign({}, state, { login: false, name: '' });
+    default:
+      return state;
+  }
+});
 
 export default class App extends React.Component { // eslint-disable-line react/prefer-stateless-function
 
@@ -49,10 +62,6 @@ export default class App extends React.Component { // eslint-disable-line react/
     auth.onAuthStateChanged(this.onAuthStateChanged);
   }
 
-  componentWillUnmount() {
-    firebase.remove();
-  }
-
     // Triggers when the auth state change for instance when the user signs-in or signs-out.
   onAuthStateChanged = (user) => {
     if (user) {
@@ -60,14 +69,17 @@ export default class App extends React.Component { // eslint-disable-line react/
         loggedIn: true,
         username: user.displayName,
       });
+      store.dispatch({ type: 'LOGIN', name: user.displayName });
     }
   }
 
   signIn = () => {
-    const { auth } = this.state;
+    const { auth, username } = this.state;
     // Sign in Firebase using popup auth and Google as the identity provider.
     const provider = new firebase.auth.GoogleAuthProvider();
     auth.signInWithPopup(provider);
+    this.setState({ loggedIn: true });
+    store.dispatch({ type: 'LOGIN', name: username });
   }
 
   signOut = () => {
@@ -75,6 +87,7 @@ export default class App extends React.Component { // eslint-disable-line react/
     // Sign out of Firebase.
     auth.signOut();
     this.setState({ loggedIn: false });
+    store.dispatch({ type: 'LOGOUT' });
   }
 
   render() {
@@ -93,9 +106,11 @@ export default class App extends React.Component { // eslint-disable-line react/
             Sign-in with Google
           </Button>
         </div>
-        <div className={styles.container}>
-          {this.props.children}
-        </div>
+        <Provider store={store}>
+          <div className={styles.container}>
+            {this.props.children}
+          </div>
+        </Provider>
       </div>
     );
   }

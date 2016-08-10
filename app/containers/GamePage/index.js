@@ -5,6 +5,10 @@ import MessageList from './messages.js';
 
 export default class GamePage extends Component {
 
+  static contextTypes = {
+    store: PropTypes.object,
+  }
+
   static propTypes = {
     params: PropTypes.object,
   }
@@ -14,28 +18,13 @@ export default class GamePage extends Component {
     this.state = {
       auth: firebase.auth(),
       database: firebase.database(),
-      loggedIn: false,
       message: '',
       messages: [],
-      username: '',
     };
   }
 
-  componentWillMount() {
-    const { auth } = this.state;
-    // Initiates Firebase auth and listen to auth state changes.
-    auth.onAuthStateChanged(this.onAuthStateChanged);
+  componentWillUpdate() {
     this.loadMessages();
-  }
-
-  // Triggers when the auth state change for instance when the user signs-in or signs-out.
-  onAuthStateChanged = (user) => {
-    if (user) {
-      this.setState({
-        loggedIn: true,
-        username: user.displayName,
-      });
-    }
   }
 
   handleChange = (event) => {
@@ -45,12 +34,13 @@ export default class GamePage extends Component {
 
   saveMessage = (event) => {
     event.preventDefault();
-    const { database, loggedIn, message, username } = this.state;
+    const { database, message } = this.state;
     const { params } = this.props;
-    if (message && loggedIn) {
+    const { store } = this.context;
+    if (message && store.getState().login) {
       // Add a new message entry to the Firebase Database.
       database.ref(params.rid).push({
-        name: username,
+        name: store.getState().name,
         text: message,
       }).then(() => {
         this.setState({ message: '' });
