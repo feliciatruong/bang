@@ -19,10 +19,10 @@ export default class Bang extends Component {
   }
 
   componentWillMount() {
-    this.assignRoles();
+    console.log(this.props);
   }
 
-  assignRoles() {
+  assignRoles = () => {
     const { players, roles } = this.state;
     for (let i = players - 1; i >= 0; i--) {
       const index = Math.floor(Math.random() * (i + 1));
@@ -53,6 +53,7 @@ export default class Bang extends Component {
         <Button
           type="submit"
           bsStyle="primary"
+          onClick={this.assignRoles}
         >
           Assign Roles
         </Button>

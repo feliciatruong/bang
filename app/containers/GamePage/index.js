@@ -12,12 +12,17 @@ export default class GamePage extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      assign: false,
       auth: firebase.auth(),
       database: firebase.database(),
+      email: '',
+      joined: false,
       loggedIn: false,
       message: '',
       messages: [],
+      players: 0,
       participants: [],
+      roles: ['Sheriff', 'Outlaw', 'Renegade', 'Outlaw', 'Vice', 'Outlaw', 'Vice'],
       username: '',
     };
   }
@@ -30,13 +35,19 @@ export default class GamePage extends Component {
 
   // Triggers when the auth state change for instance when the user signs-in or signs-out.
   onAuthStateChanged = (user) => {
+    const { database } = this.state;
+    const { params } = this.props;
+    const userRef = database.ref(`${params.rid}/participants/`).child(this.escapeEmailAddress(user.email));
     if (user) {
       this.setState({
         loggedIn: true,
         username: user.displayName,
+        email: user.email,
         messages: [],
       });
       this.loadMessages();
+      this.loadParticipants();
+      userRef.update({ name: user.displayName });
     }
   }
 
@@ -83,12 +94,86 @@ export default class GamePage extends Component {
     });
   }
 
+  loadParticipants() {
+    const { database, participants } = this.state;
+    const { params } = this.props;
+    const usersRef = database.ref(`${params.rid}/participants`);
+    usersRef.off();
+    usersRef.limitToLast(12).on('child_added', (data) => {
+      const val = data.val();
+      participants.push({ key: data.key, name: val.name, role: '' });
+      this.setState({ participants });
+    });
+    usersRef.limitToLast(12).on('child_changed', (data) => {
+      const val = data.val();
+      participants.push({ key: data.key, name: val.name, role: '' });
+      this.setState({ participants });
+    });
+    usersRef.once('value', (snapshot) => {
+      const num = snapshot.numChildren();
+      this.setState({ players: num });
+      if (num >= 3) {
+        this.setState({ assign: true });
+      }
+    });
+  }
+
+  deleteMessages = () => {
+    const { database } = this.state;
+    const { params } = this.props;
+    const messagesRef = database.ref(`${params.rid}/messages/`);
+    messagesRef.remove();
+    this.setState({ messages: [] });
+  }
+
+  joinGame = () => {
+    const { database, email, username } = this.state;
+    const { params } = this.props;
+    const userRef = database.ref(`${params.rid}/participants/`).child(this.escapeEmailAddress(email));
+    userRef.update({ name: username });
+  }
+
+  leaveGame = () => {
+    const { database, email } = this.state;
+    const { params } = this.props;
+    const userRef = database.ref(`${params.rid}/participants/`).child(this.escapeEmailAddress(email));
+    userRef.remove();
+  }
+
+  assignRoles = () => {
+    const { database, participants, players, roles } = this.state;
+    const { params } = this.props;
+    const usersRef = database.ref(`${params.rid}/participants`);
+    const messagesRef = database.ref(`${params.rid}/messages`);
+    usersRef.off();
+    for (let i = players - 1; i >= 0; i--) {
+      const index = Math.floor(Math.random() * (i + 1));
+      const userRef = usersRef.child(participants[i].key);
+      participants[i].role = roles[index];
+      userRef.update({ role: participants[i].role });
+      if (roles[index] === 'Sheriff') {
+        messagesRef.push({ name: '[SYSTEM]', text: `${participants[i].name} is the Sheriff!` });
+      }
+      roles.splice(index, 1);
+      this.setState({ roles, participants });
+    }
+  }
+
   render() {
-    const { message, messages } = this.state;
+    const { assign, joined, message, messages, participants } = this.state;
     return (
       <div>
         <h3>Game Page</h3>
         <div>
+          <Button hidden={!joined} onClick={this.joinGame}>
+            Join Game
+          </Button>
+          <Button hidden={joined} onClick={this.leaveGame}>
+            Leave Game
+          </Button>
+          <h4>Participants</h4>
+          <MessageList items={participants} />
+          <h4>Chat</h4>
           <div id="messages">
             <MessageList items={messages} />
           </div>
@@ -109,6 +194,14 @@ export default class GamePage extends Component {
               </Button>
             </FormGroup>
           </form>
+          <Button
+            disabled={!assign}
+            type="submit"
+            bsStyle="primary"
+            onClick={this.assignRoles}
+          >
+            Assign Roles
+          </Button>
         </div>
       </div>
     );
