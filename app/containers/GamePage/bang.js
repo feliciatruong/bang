@@ -4,7 +4,11 @@ import { Button } from 'react-bootstrap';
 
 export default class Bang extends Component {
   static propTypes = {
+    assign: PropTypes.bool,
+    database: PropTypes.object,
     params: PropTypes.object,
+    participants: PropTypes.array,
+    players: PropTypes.number,
   }
 
   constructor(props) {
@@ -12,45 +16,128 @@ export default class Bang extends Component {
     this.state = {
       auth: firebase.auth(),
       database: firebase.database(),
-      players: 5,
       roles: ['Sheriff', 'Outlaw', 'Renegade', 'Outlaw', 'Vice', 'Outlaw', 'Vice'],
-      cards: [''],
+      deck: [],
+      joined: false,
     };
   }
 
-  componentWillMount() {
-    console.log(this.props);
-  }
-
   assignRoles = () => {
-    const { players, roles } = this.state;
+    const { roles } = this.state;
+    const { database, params, participants, players } = this.props;
+    const usersRef = database.ref(`${params.rid}/participants`);
+    const messagesRef = database.ref(`${params.rid}/messages`);
+    usersRef.off();
     for (let i = players - 1; i >= 0; i--) {
       const index = Math.floor(Math.random() * (i + 1));
-      console.log(roles[index]);
+      const userRef = usersRef.child(participants[i].key);
+      participants[i].role = roles[index];
+      userRef.update({ role: participants[i].role });
+      userRef.update({ health: participants[i].health });
+      userRef.update({ hand: participants[i].hand });
+      if (roles[index] === 'Sheriff') {
+        messagesRef.push({ name: '[SYSTEM]', text: `${participants[i].name} is the Sheriff!` });
+      }
       roles.splice(index, 1);
-      console.log(roles);
-      this.setState({ roles });
+      this.setState({ roles, participants });
+    }
+    this.createBangCards();
+    this.shuffleCards();
+    this.dealCards();
+  }
+
+  shuffleCards() {
+    const { deck } = this.state;
+    const { params, database } = this.props;
+    for (let i = deck.length - 1; i >= 0; i--) {
+      const rand = Math.floor(Math.random() * (i + 1));
+      const temp = deck[i];
+      deck[i] = deck[rand];
+      deck[rand] = temp;
+    }
+    this.setState({ deck });
+    database.ref(`${params.rid}/cards`).remove();
+    for (let i = 0; i < deck.length - 1; i++) {
+      database.ref(`${params.rid}/cards`).push(deck[i]);
+    }
+  }
+
+  dealCards() {
+    const { deck } = this.state;
+    const { database, params, participants, players } = this.props;
+    const usersRef = database.ref(`${params.rid}/participants`);
+    for (let i = 0; i < 5; i++) {
+      for (let j = 0; j < players; j++) {
+        participants[j].hand.push(deck[deck.length - 1]);
+        deck.pop();
+      }
+    }
+    this.setState({ deck, participants });
+    for (let j = 0; j < players; j++) {
+      const userRef = usersRef.child(participants[j].key);
+      userRef.update({ hand: participants[j].hand });
     }
   }
 
   createBangCards() {
-    const { cards, players } = this.state;
+    const { deck } = this.state;
+    const { players } = this.props;
     for (let i = 0; i < 25; i++) {
-      cards.push({ name: 'Bang!', type: 'attack', hit: -1, targets: 1, limit: 1 });
+      deck.push({ name: 'Bang!', type: 'attack', hit: -1, targets: 1, limit: 1 });
     }
     for (let i = 0; i < 3; i++) {
-      cards.push({ name: 'Indians', type: 'attack', hit: -1, targets: players, limit: 0 });
+      deck.push({ name: 'Indians', type: 'attack', hit: -1, targets: players, limit: 0 });
     }
     for (let i = 0; i < 12; i++) {
-      cards.push({ name: 'Missed!', type: 'defense', hit: 1, targets: 1, limit: 0 });
+      deck.push({ name: 'Missed!', type: 'defense', hit: 0, targets: 1, limit: 0 });
     }
-    this.setState({ cards });
+    for (let i = 0; i < 6; i++) {
+      deck.push({ name: 'Beer', type: 'defense', hit: 1, targets: 1, limit: 0 });
+    }
+    for (let i = 0; i < 4; i++) {
+      deck.push({ name: 'Panic!', type: 'support', hit: 0, targets: 1, limit: 0, range: 1 });
+    }
+    for (let i = 0; i < 4; i++) {
+      deck.push({ name: 'Cat Balou', type: 'support', hit: 0, targets: 1, limit: 0 });
+    }
+    for (let i = 0; i < 2; i++) {
+      deck.push({ name: 'Stagecoach', type: 'support', hit: 0, targets: 1, limit: 0 });
+    }
+    for (let i = 0; i < 2; i++) {
+      deck.push({ name: 'Wells Fargo', type: 'support', hit: 0, targets: 1, limit: 0 });
+    }
+    this.setState({ deck });
+  }
+
+  joinGame = () => {
+    const { database, email, username } = this.state;
+    const { params } = this.props;
+    const userRef = database.ref(`${params.rid}/participants/`).child(this.escapeEmailAddress(email));
+    userRef.update({ name: username });
+    this.setState({ joined: true });
+  }
+
+  leaveGame = () => {
+    const { database, email } = this.state;
+    const { params } = this.props;
+    const userRef = database.ref(`${params.rid}/participants/`).child(this.escapeEmailAddress(email));
+    userRef.remove();
+    this.setState({ joined: false });
   }
 
   render() {
+    const { joined } = this.state;
+    const { assign } = this.props;
     return (
       <div>
+        <Button hidden={!joined} onClick={this.joinGame}>
+          Join Game
+        </Button>
+        <Button hidden={joined} onClick={this.leaveGame}>
+          Leave Game
+        </Button>
         <Button
+          disabled={!assign}
           type="submit"
           bsStyle="primary"
           onClick={this.assignRoles}
