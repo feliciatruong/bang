@@ -127,41 +127,8 @@ export default class GamePage extends Component {
     this.setState({ messages: [] });
   }
 
-  joinGame = () => {
-    const { database, email, username } = this.state;
-    const { params } = this.props;
-    const userRef = database.ref(`${params.rid}/participants/`).child(this.escapeEmailAddress(email));
-    userRef.update({ name: username });
-  }
-
-  leaveGame = () => {
-    const { database, email } = this.state;
-    const { params } = this.props;
-    const userRef = database.ref(`${params.rid}/participants/`).child(this.escapeEmailAddress(email));
-    userRef.remove();
-  }
-
-  // assignRoles = () => {
-  //   const { database, participants, players, roles } = this.state;
-  //   const { params } = this.props;
-  //   const usersRef = database.ref(`${params.rid}/participants`);
-  //   const messagesRef = database.ref(`${params.rid}/messages`);
-  //   usersRef.off();
-  //   for (let i = players - 1; i >= 0; i--) {
-  //     const index = Math.floor(Math.random() * (i + 1));
-  //     const userRef = usersRef.child(participants[i].key);
-  //     participants[i].role = roles[index];
-  //     userRef.update({ role: participants[i].role });
-  //     if (roles[index] === 'Sheriff') {
-  //       messagesRef.push({ name: '[SYSTEM]', text: `${participants[i].name} is the Sheriff!` });
-  //     }
-  //     roles.splice(index, 1);
-  //     this.setState({ roles, participants });
-  //   }
-  // }
-
   render() {
-    const { assign, database, message, messages, participants, players } = this.state;
+    const { assign, database, email, message, messages, participants, players } = this.state;
     const { params } = this.props;
     return (
       <div>
@@ -195,6 +162,7 @@ export default class GamePage extends Component {
           <Bang
             assign={assign}
             database={database}
+            email={email}
             params={params}
             participants={participants}
             players={players}

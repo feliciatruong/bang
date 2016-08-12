@@ -1,11 +1,13 @@
 import React, { Component, PropTypes } from 'react';
 import * as firebase from 'firebase';
 import { Button } from 'react-bootstrap';
+import Hand from './hand.js';
 
 export default class Bang extends Component {
   static propTypes = {
     assign: PropTypes.bool,
     database: PropTypes.object,
+    email: PropTypes.string,
     params: PropTypes.object,
     participants: PropTypes.array,
     players: PropTypes.number,
@@ -16,6 +18,7 @@ export default class Bang extends Component {
     this.state = {
       auth: firebase.auth(),
       database: firebase.database(),
+      hand: [],
       roles: ['Sheriff', 'Outlaw', 'Renegade', 'Outlaw', 'Vice', 'Outlaw', 'Vice'],
       deck: [],
       joined: false,
@@ -44,6 +47,7 @@ export default class Bang extends Component {
     this.createBangCards();
     this.shuffleCards();
     this.dealCards();
+    this.loadHand();
   }
 
   shuffleCards() {
@@ -57,6 +61,7 @@ export default class Bang extends Component {
     }
     this.setState({ deck });
     database.ref(`${params.rid}/cards`).remove();
+    database.ref(`${params.rid}/hand`).remove();
     for (let i = 0; i < deck.length - 1; i++) {
       database.ref(`${params.rid}/cards`).push(deck[i]);
     }
@@ -109,6 +114,28 @@ export default class Bang extends Component {
     this.setState({ deck });
   }
 
+  escapeEmailAddress(email) {
+    if (!email) return false;
+    // Replace '.' (not allowed in a Firebase key) with ',' (not allowed in an email address)
+    return email.toLowerCase().replace(/\./g, ',');
+  }
+
+  loadHand() {
+    const { hand } = this.state;
+    const { database, email, params } = this.props;
+    const userRef = database.ref(`${params.rid}/participants/${this.escapeEmailAddress(email)}/hand/`);
+    userRef.off();
+    userRef.limitToLast(12).on('child_added', (data) => {
+      const val = data.val();
+      hand.push({ key: data.key, name: val.name });
+    });
+    userRef.limitToLast(12).on('child_changed', (data) => {
+      const val = data.val();
+      hand.push({ key: data.key, name: val.name });
+    });
+    this.setState({ hand });
+  }
+
   joinGame = () => {
     const { database, email, username } = this.state;
     const { params } = this.props;
@@ -126,7 +153,7 @@ export default class Bang extends Component {
   }
 
   render() {
-    const { joined } = this.state;
+    const { hand, joined } = this.state;
     const { assign } = this.props;
     return (
       <div>
@@ -144,6 +171,7 @@ export default class Bang extends Component {
         >
           Assign Roles
         </Button>
+        <Hand items={hand} />
       </div>
     );
   }
