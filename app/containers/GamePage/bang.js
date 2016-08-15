@@ -11,6 +11,7 @@ export default class Bang extends Component {
     params: PropTypes.object,
     participants: PropTypes.array,
     players: PropTypes.number,
+    username: PropTypes.string,
   }
 
   constructor(props) {
@@ -23,6 +24,19 @@ export default class Bang extends Component {
       deck: [],
       joined: false,
     };
+  }
+
+  componentWillMount() {
+    const { auth } = this.state;
+    // Initiates Firebase auth and listen to auth state changes.
+    auth.onAuthStateChanged(this.onAuthStateChanged);
+  }
+
+  // Triggers when the auth state change for instance when the user signs-in or signs-out.
+  onAuthStateChanged = (user) => {
+    if (user) {
+      this.loadHand();
+    }
   }
 
   assignRoles = () => {
@@ -47,7 +61,6 @@ export default class Bang extends Component {
     this.createBangCards();
     this.shuffleCards();
     this.dealCards();
-    this.loadHand();
   }
 
   shuffleCards() {
@@ -73,8 +86,7 @@ export default class Bang extends Component {
     const usersRef = database.ref(`${params.rid}/participants`);
     for (let i = 0; i < 5; i++) {
       for (let j = 0; j < players; j++) {
-        participants[j].hand.push(deck[deck.length - 1]);
-        deck.pop();
+        participants[j].hand.push(deck.pop());
       }
     }
     this.setState({ deck, participants });
@@ -137,19 +149,17 @@ export default class Bang extends Component {
   }
 
   joinGame = () => {
-    const { database, email, username } = this.state;
-    const { params } = this.props;
+    const { database, email, params, username } = this.props;
     const userRef = database.ref(`${params.rid}/participants/`).child(this.escapeEmailAddress(email));
     userRef.update({ name: username });
-    this.setState({ joined: true });
+    this.setState({ joined: false });
   }
 
   leaveGame = () => {
-    const { database, email } = this.state;
-    const { params } = this.props;
+    const { database, email, params } = this.props;
     const userRef = database.ref(`${params.rid}/participants/`).child(this.escapeEmailAddress(email));
     userRef.remove();
-    this.setState({ joined: false });
+    this.setState({ joined: true });
   }
 
   render() {

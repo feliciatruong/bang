@@ -128,7 +128,7 @@ export default class GamePage extends Component {
   }
 
   render() {
-    const { assign, database, email, message, messages, participants, players } = this.state;
+    const { assign, database, email, message, messages, participants, players, username } = this.state;
     const { params } = this.props;
     return (
       <div>
@@ -157,6 +157,11 @@ export default class GamePage extends Component {
               >
                 Send
               </Button>
+              <Button
+                onClick={this.deleteMessages}
+              >
+                Delete messages
+              </Button>
             </FormGroup>
           </form>
           <Bang
@@ -166,6 +171,7 @@ export default class GamePage extends Component {
             params={params}
             participants={participants}
             players={players}
+            username={username}
           />
         </div>
       </div>

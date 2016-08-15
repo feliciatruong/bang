@@ -1,4 +1,5 @@
 import React, { Component, PropTypes } from 'react';
+import { Button } from 'react-bootstrap';
 
 export default class Hand extends Component {
   static propTypes = {
@@ -17,7 +18,7 @@ export default class Hand extends Component {
             <div
               key={item.key}
             >
-              <div id="card">{item.name}</div>
+              <Button id="card">{item.name}</Button>
             </div>
         )}
       </ul>
