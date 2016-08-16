@@ -1,5 +1,4 @@
 import React, { Component, PropTypes } from 'react';
-import * as firebase from 'firebase';
 import { Button } from 'react-bootstrap';
 import Hand from './hand.js';
 
@@ -17,26 +16,11 @@ export default class Bang extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      auth: firebase.auth(),
-      database: firebase.database(),
       hand: [],
       roles: ['Sheriff', 'Outlaw', 'Renegade', 'Outlaw', 'Vice', 'Outlaw', 'Vice'],
       deck: [],
       joined: false,
     };
-  }
-
-  componentWillMount() {
-    const { auth } = this.state;
-    // Initiates Firebase auth and listen to auth state changes.
-    auth.onAuthStateChanged(this.onAuthStateChanged);
-  }
-
-  // Triggers when the auth state change for instance when the user signs-in or signs-out.
-  onAuthStateChanged = (user) => {
-    if (user) {
-      this.loadHand();
-    }
   }
 
   assignRoles = () => {
@@ -61,6 +45,7 @@ export default class Bang extends Component {
     this.createBangCards();
     this.shuffleCards();
     this.dealCards();
+    this.loadHand();
   }
 
   shuffleCards() {

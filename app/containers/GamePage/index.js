@@ -22,7 +22,6 @@ export default class GamePage extends Component {
       messages: [],
       players: 0,
       participants: [],
-      roles: ['Sheriff', 'Outlaw', 'Renegade', 'Outlaw', 'Vice', 'Outlaw', 'Vice'],
       username: '',
     };
   }
@@ -104,18 +103,13 @@ export default class GamePage extends Component {
       const val = data.val();
       participants.push({ key: data.key, name: val.name, role: '', health: 5, hand: [] });
       this.setState({ participants });
-    });
-    usersRef.limitToLast(12).on('child_changed', (data) => {
-      const val = data.val();
-      participants.push({ key: data.key, name: val.name, role: '', health: 5, hand: [] });
-      this.setState({ participants });
-    });
-    usersRef.once('value', (snapshot) => {
-      const num = snapshot.numChildren();
-      this.setState({ players: num });
-      if (num >= 3) {
-        this.setState({ assign: true });
-      }
+      usersRef.once('value', (snapshot) => {
+        const num = snapshot.numChildren();
+        this.setState({ players: num });
+        if (num >= 3) {
+          this.setState({ assign: true });
+        }
+      });
     });
   }
 
