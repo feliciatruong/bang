@@ -87,10 +87,14 @@ export default class GamePage extends Component {
       messages.push({ key: data.key, name: val.name, text: val.text });
       this.setState({ messages });
     });
-    messagesRef.limitToLast(12).on('child_changed', (data) => {
-      const val = data.val();
-      messages.push({ key: data.key, name: val.name, text: val.text });
-      this.setState({ messages });
+    messagesRef.on('child_removed', (data) => {
+      for (let i = 0; i < messages.length; i++) {
+        if (messages[i].key === data.key) {
+          messages.splice(i, 1);
+          this.setState({ messages });
+          return;
+        }
+      }
     });
   }
 
@@ -101,28 +105,16 @@ export default class GamePage extends Component {
     usersRef.limitToLast(12).on('child_added', (data) => {
       const val = data.val();
       participants.push({ key: data.key, name: val.name, role: '', health: 5, hand: [] });
-      this.setState({ participants });
-      usersRef.once('value', (snapshot) => {
-        const num = snapshot.numChildren();
-        this.setState({ totalPlayers: num });
-        if (num >= 3) {
-          this.setState({ assign: true });
-        } else {
-          this.setState({ assign: false });
-        }
-      });
+      const num = participants.length;
+      this.setState({ participants, totalPlayers: num, assign: num >= 3 });
     });
-    usersRef.limitToLast(12).on('child_removed', (data) => {
+    usersRef.on('child_removed', (data) => {
       for (let i = 0; i < participants.length; i++) {
         if (participants[i].key === data.key) {
           participants.splice(i, 1);
           const num = participants.length;
-          this.setState({ participants, totalPlayers: num });
-          if (num >= 3) {
-            this.setState({ assign: true });
-          } else {
-            this.setState({ assign: false });
-          }
+          this.setState({ participants, totalPlayers: num, assign: num >= 3 });
+          return;
         }
       }
     });
@@ -131,8 +123,7 @@ export default class GamePage extends Component {
   deleteMessages = () => {
     const { database, rid } = this.state;
     const messagesRef = database.ref(`${rid}/messages/`);
-    messagesRef.remove();
-    this.setState({ messages: [] });
+    messagesRef.remove(this.setState({ messages: [] }));
   }
 
   render() {

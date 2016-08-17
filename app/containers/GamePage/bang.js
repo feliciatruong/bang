@@ -20,6 +20,7 @@ export default class Bang extends Component {
       roles: ['Sheriff', 'Outlaw', 'Renegade', 'Outlaw', 'Vice', 'Outlaw', 'Vice'],
       deck: [],
       joined: false,
+      rolesAssigned: false,
     };
   }
 
@@ -35,7 +36,7 @@ export default class Bang extends Component {
       userRef.update({
         role: participants[i].role,
         health: participants[i].health,
-        hand: participants[i].hand,
+        hand: [],
       });
       if (roles[index] === 'Sheriff') {
         messagesRef.push({ name: '[SYSTEM]', text: `${participants[i].name} is the Sheriff!` });
@@ -43,6 +44,7 @@ export default class Bang extends Component {
       roles.splice(index, 1);
       this.setState({ roles, participants });
     }
+    this.setState({ rolesAssigned: true });
     this.createBangCards();
     this.shuffleCards();
     this.dealCards();
@@ -53,7 +55,7 @@ export default class Bang extends Component {
     const { deck } = this.state;
     const { database, rid } = this.props;
     for (let i = deck.length - 1; i >= 0; i--) {
-      const rand = Math.floor(Math.random() * (deck.length + 1));
+      const rand = Math.floor(Math.random() * (deck.length));
       const temp = deck[i];
       deck[i] = deck[rand];
       deck[rand] = temp;
@@ -117,8 +119,9 @@ export default class Bang extends Component {
     userRef.limitToLast(12).on('child_added', (data) => {
       const val = data.val();
       hand.push({ key: data.key, name: val.name });
+      this.setState({ hand });
     });
-    userRef.limitToLast(12).on('child_removed', (data) => {
+    userRef.on('child_removed', (data) => {
       const val = data.val();
       for (let i = 0; i < hand.length; i++) {
         if (hand[i].name === val.name) {
@@ -127,7 +130,6 @@ export default class Bang extends Component {
         }
       }
     });
-    this.setState({ hand });
   }
 
   joinGame = () => {
@@ -145,7 +147,7 @@ export default class Bang extends Component {
   }
 
   render() {
-    const { hand, joined } = this.state;
+    const { hand, joined, rolesAssigned } = this.state;
     const { assign } = this.props;
     return (
       <div>
@@ -156,6 +158,7 @@ export default class Bang extends Component {
           Leave Game
         </Button>
         <Button
+          hidden={rolesAssigned}
           disabled={!assign}
           type="submit"
           bsStyle="primary"

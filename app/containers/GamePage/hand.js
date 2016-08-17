@@ -18,7 +18,7 @@ export default class Hand extends Component {
             <div
               key={item.key}
             >
-              <Button id="card">{item.name}</Button>
+              <Button>{item.name}</Button>
             </div>
         )}
       </ul>
