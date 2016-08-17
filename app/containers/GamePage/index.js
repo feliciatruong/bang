@@ -102,7 +102,7 @@ export default class GamePage extends Component {
     const { database, participants, rid } = this.state;
     const usersRef = database.ref(`${rid}/participants`);
     usersRef.off();
-    usersRef.limitToLast(12).on('child_added', (data) => {
+    usersRef.on('child_added', (data) => {
       const val = data.val();
       participants.push({ key: data.key, name: val.name, role: '', health: 5, hand: [] });
       const num = participants.length;
@@ -123,7 +123,8 @@ export default class GamePage extends Component {
   deleteMessages = () => {
     const { database, rid } = this.state;
     const messagesRef = database.ref(`${rid}/messages/`);
-    messagesRef.remove(this.setState({ messages: [] }));
+    messagesRef.remove();
+    this.setState({ messages: [] });
   }
 
   render() {

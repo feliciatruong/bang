@@ -116,7 +116,7 @@ export default class Bang extends Component {
     const { database, emailKey, rid } = this.props;
     const userRef = database.ref(`${rid}/participants/${emailKey}/hand/`);
     userRef.off();
-    userRef.limitToLast(12).on('child_added', (data) => {
+    userRef.on('child_added', (data) => {
       const val = data.val();
       hand.push({ key: data.key, name: val.name });
       this.setState({ hand });
