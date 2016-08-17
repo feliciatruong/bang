@@ -1,6 +1,7 @@
 import React, { Component, PropTypes } from 'react';
+import { Button } from 'react-bootstrap';
 
-export default class MessageList extends Component {
+export default class Hand extends Component {
   static propTypes = {
     items: PropTypes.array,
   }
@@ -17,8 +18,7 @@ export default class MessageList extends Component {
             <div
               key={item.key}
             >
-              <div>{item.name}</div>
-              <div>{item.text}</div>
+              <Button>{item.name}</Button>
             </div>
         )}
       </ul>
