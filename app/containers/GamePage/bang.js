@@ -11,6 +11,7 @@ export default class Bang extends Component {
     participants: PropTypes.array,
     players: PropTypes.number,
     username: PropTypes.string,
+    loadParticipants: PropTypes.func.isRequired,
   }
 
   constructor(props) {
@@ -33,9 +34,11 @@ export default class Bang extends Component {
       const index = Math.floor(Math.random() * (i + 1));
       const userRef = usersRef.child(participants[i].key);
       participants[i].role = roles[index];
-      userRef.update({ role: participants[i].role });
-      userRef.update({ health: participants[i].health });
-      userRef.update({ hand: participants[i].hand });
+      userRef.update({
+        role: participants[i].role,
+        health: participants[i].health,
+        hand: participants[i].hand,
+      });
       if (roles[index] === 'Sheriff') {
         messagesRef.push({ name: '[SYSTEM]', text: `${participants[i].name} is the Sheriff!` });
       }
@@ -126,9 +129,13 @@ export default class Bang extends Component {
       const val = data.val();
       hand.push({ key: data.key, name: val.name });
     });
-    userRef.limitToLast(12).on('child_changed', (data) => {
-      const val = data.val();
-      hand.push({ key: data.key, name: val.name });
+    userRef.limitToLast(12).on('child_removed', (data) => {
+      for (let i = 0; i < hand.length; i++) {
+        if (hand[i].key === data.key) {
+          hand.splice(i, 1);
+          this.setState({ hand });
+        }
+      }
     });
     this.setState({ hand });
   }

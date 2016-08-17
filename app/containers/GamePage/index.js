@@ -108,8 +108,24 @@ export default class GamePage extends Component {
         this.setState({ players: num });
         if (num >= 3) {
           this.setState({ assign: true });
+        } else {
+          this.setState({ assign: false });
         }
       });
+    });
+    usersRef.limitToLast(12).on('child_removed', (data) => {
+      for (let i = 0; i < participants.length; i++) {
+        if (participants[i].key === data.key) {
+          participants.splice(i, 1);
+          const num = participants.length;
+          this.setState({ participants, players: num });
+          if (num >= 3) {
+            this.setState({ assign: true });
+          } else {
+            this.setState({ assign: false });
+          }
+        }
+      }
     });
   }
 
@@ -166,6 +182,7 @@ export default class GamePage extends Component {
             participants={participants}
             players={players}
             username={username}
+            loadParticipants={this.loadParticipants}
           />
         </div>
       </div>
