@@ -17,8 +17,8 @@ export default class MessageList extends Component {
             <div
               key={item.key}
             >
-              <div id="username">{item.name}</div>
-              <div id="message">{item.text}</div>
+              <div>{item.name}</div>
+              <div>{item.text}</div>
             </div>
         )}
       </ul>

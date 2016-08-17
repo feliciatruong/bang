@@ -16,38 +16,40 @@ export default class GamePage extends Component {
       assign: false,
       auth: firebase.auth(),
       database: firebase.database(),
-      email: '',
+      emailKey: '',
       loggedIn: false,
       message: '',
       messages: [],
-      players: 0,
+      totalPlayers: 0,
       participants: [],
+      rid: '',
       username: '',
     };
   }
 
   componentWillMount() {
     const { auth } = this.state;
+    const { params } = this.props;
     // Initiates Firebase auth and listen to auth state changes.
     auth.onAuthStateChanged(this.onAuthStateChanged);
+    this.setState({ rid: params.rid });
   }
 
   // Triggers when the auth state change for instance when the user signs-in or signs-out.
   onAuthStateChanged = (user) => {
-    const { database } = this.state;
-    const { params } = this.props;
-    const userRef = database.ref(`${params.rid}/participants/`).child(this.escapeEmailAddress(user.email));
+    const { database, rid } = this.state;
     if (user) {
       this.setState({
         loggedIn: true,
         username: user.displayName,
-        email: user.email,
+        emailKey: this.escapeEmailAddress(user.email),
         messages: [],
         participants: [],
       });
+      const userRef = database.ref(`${rid}/participants/`).child(this.escapeEmailAddress(user.email));
+      userRef.update({ name: user.displayName });
       this.loadMessages();
       this.loadParticipants();
-      userRef.update({ name: user.displayName });
     }
   }
 
@@ -64,11 +66,10 @@ export default class GamePage extends Component {
 
   saveMessage = (event) => {
     event.preventDefault();
-    const { database, loggedIn, message, username } = this.state;
-    const { params } = this.props;
+    const { database, loggedIn, message, rid, username } = this.state;
     if (message && loggedIn) {
       // Add a new message entry to the Firebase Database.
-      database.ref(`${params.rid}/messages`).push({
+      database.ref(`${rid}/messages`).push({
         name: username,
         text: message,
       }).then(() => {
@@ -78,9 +79,8 @@ export default class GamePage extends Component {
   }
 
   loadMessages() {
-    const { database, messages } = this.state;
-    const { params } = this.props;
-    const messagesRef = database.ref(`${params.rid}/messages`);
+    const { database, messages, rid } = this.state;
+    const messagesRef = database.ref(`${rid}/messages`);
     messagesRef.off();
     messagesRef.limitToLast(12).on('child_added', (data) => {
       const val = data.val();
@@ -95,9 +95,8 @@ export default class GamePage extends Component {
   }
 
   loadParticipants() {
-    const { database, participants } = this.state;
-    const { params } = this.props;
-    const usersRef = database.ref(`${params.rid}/participants`);
+    const { database, participants, rid } = this.state;
+    const usersRef = database.ref(`${rid}/participants`);
     usersRef.off();
     usersRef.limitToLast(12).on('child_added', (data) => {
       const val = data.val();
@@ -105,7 +104,7 @@ export default class GamePage extends Component {
       this.setState({ participants });
       usersRef.once('value', (snapshot) => {
         const num = snapshot.numChildren();
-        this.setState({ players: num });
+        this.setState({ totalPlayers: num });
         if (num >= 3) {
           this.setState({ assign: true });
         } else {
@@ -118,7 +117,7 @@ export default class GamePage extends Component {
         if (participants[i].key === data.key) {
           participants.splice(i, 1);
           const num = participants.length;
-          this.setState({ participants, players: num });
+          this.setState({ participants, totalPlayers: num });
           if (num >= 3) {
             this.setState({ assign: true });
           } else {
@@ -130,16 +129,14 @@ export default class GamePage extends Component {
   }
 
   deleteMessages = () => {
-    const { database } = this.state;
-    const { params } = this.props;
-    const messagesRef = database.ref(`${params.rid}/messages/`);
+    const { database, rid } = this.state;
+    const messagesRef = database.ref(`${rid}/messages/`);
     messagesRef.remove();
     this.setState({ messages: [] });
   }
 
   render() {
-    const { assign, database, email, message, messages, participants, players, username } = this.state;
-    const { params } = this.props;
+    const { assign, database, emailKey, message, messages, participants, rid, username } = this.state;
     return (
       <div>
         <h3>Game Page</h3>
@@ -177,10 +174,9 @@ export default class GamePage extends Component {
           <Bang
             assign={assign}
             database={database}
-            email={email}
-            params={params}
+            emailKey={emailKey}
+            rid={rid}
             participants={participants}
-            players={players}
             username={username}
             loadParticipants={this.loadParticipants}
           />

@@ -6,10 +6,9 @@ export default class Bang extends Component {
   static propTypes = {
     assign: PropTypes.bool,
     database: PropTypes.object,
-    email: PropTypes.string,
-    params: PropTypes.object,
+    emailKey: PropTypes.string,
     participants: PropTypes.array,
-    players: PropTypes.number,
+    rid: PropTypes.string,
     username: PropTypes.string,
     loadParticipants: PropTypes.func.isRequired,
   }
@@ -26,11 +25,10 @@ export default class Bang extends Component {
 
   assignRoles = () => {
     const { roles } = this.state;
-    const { database, params, participants, players } = this.props;
-    const usersRef = database.ref(`${params.rid}/participants`);
-    const messagesRef = database.ref(`${params.rid}/messages`);
-    usersRef.off();
-    for (let i = players - 1; i >= 0; i--) {
+    const { database, rid, participants } = this.props;
+    const usersRef = database.ref(`${rid}/participants`);
+    const messagesRef = database.ref(`${rid}/messages`);
+    for (let i = participants.length - 1; i >= 0; i--) {
       const index = Math.floor(Math.random() * (i + 1));
       const userRef = usersRef.child(participants[i].key);
       participants[i].role = roles[index];
@@ -53,32 +51,29 @@ export default class Bang extends Component {
 
   shuffleCards() {
     const { deck } = this.state;
-    const { params, database } = this.props;
+    const { database, rid } = this.props;
     for (let i = deck.length - 1; i >= 0; i--) {
-      const rand = Math.floor(Math.random() * (i + 1));
+      const rand = Math.floor(Math.random() * (deck.length + 1));
       const temp = deck[i];
       deck[i] = deck[rand];
       deck[rand] = temp;
     }
     this.setState({ deck });
-    database.ref(`${params.rid}/cards`).remove();
-    database.ref(`${params.rid}/hand`).remove();
-    for (let i = 0; i < deck.length - 1; i++) {
-      database.ref(`${params.rid}/cards`).push(deck[i]);
-    }
+    database.ref(`${rid}/cards`).set(deck);
+    database.ref(`${rid}/hand`).remove();
   }
 
   dealCards() {
     const { deck } = this.state;
-    const { database, params, participants, players } = this.props;
-    const usersRef = database.ref(`${params.rid}/participants`);
+    const { database, participants, rid } = this.props;
+    const usersRef = database.ref(`${rid}/participants`);
     for (let i = 0; i < 5; i++) {
-      for (let j = 0; j < players; j++) {
+      for (let j = 0; j < participants.length; j++) {
         participants[j].hand.push(deck.pop());
       }
     }
     this.setState({ deck, participants });
-    for (let j = 0; j < players; j++) {
+    for (let j = 0; j < participants.length; j++) {
       const userRef = usersRef.child(participants[j].key);
       userRef.update({ hand: participants[j].hand });
     }
@@ -86,12 +81,12 @@ export default class Bang extends Component {
 
   createBangCards() {
     const { deck } = this.state;
-    const { players } = this.props;
+    const { participants } = this.props;
     for (let i = 0; i < 25; i++) {
       deck.push({ name: 'Bang!', type: 'attack', hit: -1, targets: 1, limit: 1 });
     }
     for (let i = 0; i < 3; i++) {
-      deck.push({ name: 'Indians', type: 'attack', hit: -1, targets: players, limit: 0 });
+      deck.push({ name: 'Indians', type: 'attack', hit: -1, targets: participants.length, limit: 0 });
     }
     for (let i = 0; i < 12; i++) {
       deck.push({ name: 'Missed!', type: 'defense', hit: 0, targets: 1, limit: 0 });
@@ -114,24 +109,19 @@ export default class Bang extends Component {
     this.setState({ deck });
   }
 
-  escapeEmailAddress(email) {
-    if (!email) return false;
-    // Replace '.' (not allowed in a Firebase key) with ',' (not allowed in an email address)
-    return email.toLowerCase().replace(/\./g, ',');
-  }
-
   loadHand() {
     const { hand } = this.state;
-    const { database, email, params } = this.props;
-    const userRef = database.ref(`${params.rid}/participants/${this.escapeEmailAddress(email)}/hand/`);
+    const { database, emailKey, rid } = this.props;
+    const userRef = database.ref(`${rid}/participants/${emailKey}/hand/`);
     userRef.off();
     userRef.limitToLast(12).on('child_added', (data) => {
       const val = data.val();
       hand.push({ key: data.key, name: val.name });
     });
     userRef.limitToLast(12).on('child_removed', (data) => {
+      const val = data.val();
       for (let i = 0; i < hand.length; i++) {
-        if (hand[i].key === data.key) {
+        if (hand[i].name === val.name) {
           hand.splice(i, 1);
           this.setState({ hand });
         }
@@ -141,15 +131,15 @@ export default class Bang extends Component {
   }
 
   joinGame = () => {
-    const { database, email, params, username } = this.props;
-    const userRef = database.ref(`${params.rid}/participants/`).child(this.escapeEmailAddress(email));
+    const { database, emailKey, rid, username } = this.props;
+    const userRef = database.ref(`${rid}/participants/`).child(emailKey);
     userRef.update({ name: username });
     this.setState({ joined: false });
   }
 
   leaveGame = () => {
-    const { database, email, params } = this.props;
-    const userRef = database.ref(`${params.rid}/participants/`).child(this.escapeEmailAddress(email));
+    const { database, emailKey, rid } = this.props;
+    const userRef = database.ref(`${rid}/participants/`).child(emailKey);
     userRef.remove();
     this.setState({ joined: true });
   }
