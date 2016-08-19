@@ -135,8 +135,11 @@ export default class Bang extends Component {
     const { database, emailKey, rid } = this.props;
     const userRef = database.ref(`${rid}/participants/${emailKey}`);
     userRef.off();
-    userRef.once('value', (data) => {
-      this.setState({ myTurn: data.val().turn });
+    userRef.on('value', (data) => {
+      const exists = data.child('turn').exists();
+      if (exists) {
+        this.setState({ myTurn: data.val().turn });
+      }
     });
   }
 

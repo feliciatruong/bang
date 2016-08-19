@@ -46,8 +46,15 @@ export default class GamePage extends Component {
         emailKey: this.escapeEmailAddress(user.email),
         messages: [],
       });
-      const userRef = database.ref(`${rid}/participants/`).child(this.escapeEmailAddress(user.email));
-      userRef.update({ name: user.displayName });
+      const key = this.escapeEmailAddress(user.email);
+      const userRef = database.ref(`${rid}/participants/${key}`);
+      userRef.off();
+      database.ref(`${rid}`).once('value', (data) => {
+        const exists = data.child('participants').child(key).exists();
+        if (!exists) {
+          userRef.update({ name: user.displayName, order: new Date().valueOf(), turn: false });
+        }
+      });
       this.loadMessages();
       this.loadParticipants();
     }
@@ -102,7 +109,7 @@ export default class GamePage extends Component {
     const { database, emailKey, participants, rid } = this.state;
     const usersRef = database.ref(`${rid}/participants`);
     usersRef.off();
-    usersRef.on('child_added', (data) => {
+    usersRef.orderByChild('order').on('child_added', (data) => {
       const val = data.val();
       participants.push({
         key: data.key,
@@ -111,6 +118,7 @@ export default class GamePage extends Component {
         health: 5,
         hand: [],
         turn: false,
+        order: val.order,
       });
       if (data.key === emailKey) {
         this.setState({ myTurn: val.turn });
@@ -118,13 +126,13 @@ export default class GamePage extends Component {
       const num = participants.length;
       this.setState({ participants, totalPlayers: num, assign: num >= 3 });
     });
-    usersRef.on('child_changed', (data) => {
+    usersRef.orderByChild('order').on('child_changed', (data) => {
       const val = data.val();
       if (data.key === emailKey) {
         this.setState({ myTurn: val.turn });
       }
     });
-    usersRef.on('child_removed', (data) => {
+    usersRef.orderByChild('order').on('child_removed', (data) => {
       for (let i = 0; i < participants.length; i++) {
         if (participants[i].key === data.key) {
           participants.splice(i, 1);
