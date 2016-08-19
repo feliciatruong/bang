@@ -18,7 +18,6 @@ export default class Bang extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      currentPlayer: 0,
       hand: [],
       roles: ['Sheriff', 'Outlaw', 'Renegade', 'Outlaw', 'Vice', 'Outlaw', 'Vice'],
       deck: [],
@@ -60,7 +59,6 @@ export default class Bang extends Component {
         messagesRef.push({ name: '[SYSTEM]', text: `${participants[i].name} is the Sheriff!` });
         userRef.update({ turn: true });
         database.ref(`${rid}`).update({ currentPlayer: i });
-        this.setState({ currentPlayer: i });
       }
       roles.splice(index, 1);
       this.setState({ roles, participants });
@@ -170,17 +168,10 @@ export default class Bang extends Component {
     const usersRef = database.ref(`${rid}/participants`);
     databaseRef.once('value', (data) => {
       const currentPlayer = data.val().currentPlayer;
-      if (currentPlayer + 1 > participants.length - 1) {
-        usersRef.child(participants[currentPlayer].key).update({ turn: false });
-        usersRef.child(participants[0].key).update({ turn: true });
-        database.ref(`${rid}`).update({ currentPlayer: 0 });
-        this.setState({ currentPlayer: 0 });
-      } else {
-        usersRef.child(participants[currentPlayer].key).update({ turn: false });
-        usersRef.child(participants[currentPlayer + 1].key).update({ turn: true });
-        this.setState({ currentPlayer: currentPlayer + 1 });
-        database.ref(`${rid}`).update({ currentPlayer: currentPlayer + 1 });
-      }
+      const nextPlayer = (currentPlayer + 1) % participants.length;
+      usersRef.child(participants[currentPlayer].key).update({ turn: false });
+      usersRef.child(participants[nextPlayer].key).update({ turn: true });
+      databaseRef.update({ currentPlayer: nextPlayer });
     });
     this.handleTurn();
   }
