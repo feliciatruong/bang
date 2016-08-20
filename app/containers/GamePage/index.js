@@ -20,7 +20,6 @@ export default class GamePage extends Component {
       loggedIn: false,
       message: '',
       messages: [],
-      myTurn: false,
       totalPlayers: 0,
       participants: [],
       rid: '',
@@ -52,7 +51,7 @@ export default class GamePage extends Component {
       database.ref(`${rid}`).once('value', (data) => {
         const exists = data.child('participants').child(key).exists();
         if (!exists) {
-          userRef.update({ name: user.displayName, order: new Date().valueOf(), turn: false });
+          userRef.update({ name: user.displayName, order: new Date().valueOf() });
         }
       });
       this.loadMessages();
@@ -106,7 +105,7 @@ export default class GamePage extends Component {
   }
 
   loadParticipants() {
-    const { database, emailKey, participants, rid } = this.state;
+    const { database, participants, rid } = this.state;
     const usersRef = database.ref(`${rid}/participants`);
     usersRef.off();
     usersRef.orderByChild('order').on('child_added', (data) => {
@@ -117,20 +116,10 @@ export default class GamePage extends Component {
         role: val.role,
         health: 5,
         hand: [],
-        turn: false,
         order: val.order,
       });
-      if (data.key === emailKey) {
-        this.setState({ myTurn: val.turn });
-      }
       const num = participants.length;
       this.setState({ participants, totalPlayers: num, assign: num >= 3 });
-    });
-    usersRef.orderByChild('order').on('child_changed', (data) => {
-      const val = data.val();
-      if (data.key === emailKey) {
-        this.setState({ myTurn: val.turn });
-      }
     });
     usersRef.orderByChild('order').on('child_removed', (data) => {
       for (let i = 0; i < participants.length; i++) {
@@ -152,7 +141,7 @@ export default class GamePage extends Component {
   }
 
   render() {
-    const { auth, assign, database, emailKey, message, messages, myTurn, participants, rid, username } = this.state;
+    const { auth, assign, database, emailKey, message, messages, participants, rid, username } = this.state;
     return (
       <div>
         <h3>Game Page</h3>
@@ -192,7 +181,6 @@ export default class GamePage extends Component {
             assign={assign}
             database={database}
             emailKey={emailKey}
-            myTurn={myTurn}
             rid={rid}
             participants={participants}
             username={username}
