@@ -56,7 +56,7 @@ export default class Bang extends Component {
       });
       if (roles[index] === 'Sheriff') {
         messagesRef.push({ name: '[SYSTEM]', text: `${participants[i].name} is the Sheriff!` });
-        database.ref(`${rid}/current`).child('player').update({ index: i });
+        database.ref(`${rid}/current`).child('player').update({ index: i, key: participants[i].key });
       }
       roles.splice(index, 1);
       this.setState({ roles, participants });
@@ -128,27 +128,23 @@ export default class Bang extends Component {
   }
 
   handleTurn() {
-    const { database, emailKey, participants, rid } = this.props;
-    const databaseRef = database.ref(`${rid}/current/player`);
+    const { database, emailKey, rid } = this.props;
+    const databaseRef = database.ref(`${rid}/current`);
     databaseRef.off();
     databaseRef.on('child_added', (data) => {
       const val = data.val();
-      if (participants.length !== 0) {
-        if (participants[val].key === emailKey) {
-          this.setState({ myTurn: true });
-        } else {
-          this.setState({ myTurn: false });
-        }
+      if (val.key === emailKey) {
+        this.setState({ myTurn: true });
+      } else {
+        this.setState({ myTurn: false });
       }
     });
     databaseRef.on('child_changed', (data) => {
       const val = data.val();
-      if (participants.length !== 0) {
-        if (participants[val].key === emailKey) {
-          this.setState({ myTurn: true });
-        } else {
-          this.setState({ myTurn: false });
-        }
+      if (val.key === emailKey) {
+        this.setState({ myTurn: true });
+      } else {
+        this.setState({ myTurn: false });
       }
     });
   }
@@ -180,7 +176,7 @@ export default class Bang extends Component {
     databaseRef.once('value', (data) => {
       const currentPlayer = data.val().index;
       const nextPlayer = (currentPlayer + 1) % participants.length;
-      databaseRef.update({ index: nextPlayer });
+      databaseRef.update({ index: nextPlayer, key: participants[nextPlayer].key });
     });
   }
 
