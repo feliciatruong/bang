@@ -85,7 +85,6 @@ export default class Bang extends Component {
     const { deck } = this.state;
     const { database, participants, rid } = this.props;
     const usersRef = database.ref(`${rid}/participants`);
-    console.log(participants);
     for (let i = 0; i < 5; i++) {
       for (let j = 0; j < participants.length; j++) {
         participants[j].hand.push(deck.pop());
