@@ -4,6 +4,7 @@ import Hand from './hand.js';
 
 export default class Bang extends Component {
   static propTypes = {
+    auth: PropTypes.object,
     assign: PropTypes.bool,
     database: PropTypes.object,
     emailKey: PropTypes.string,
@@ -20,8 +21,23 @@ export default class Bang extends Component {
       roles: ['Sheriff', 'Outlaw', 'Renegade', 'Outlaw', 'Vice', 'Outlaw', 'Vice'],
       deck: [],
       joined: false,
+      myTurn: false,
       rolesAssigned: false,
     };
+  }
+
+  componentWillMount() {
+    const { auth } = this.props;
+    // Initiates Firebase auth and listen to auth state changes.
+    auth.onAuthStateChanged(this.onAuthStateChanged);
+  }
+
+    // Triggers when the auth state change for instance when the user signs-in or signs-out.
+  onAuthStateChanged = (user) => {
+    if (user) {
+      this.loadHand();
+      this.handleTurn();
+    }
   }
 
   assignRoles = () => {
@@ -40,6 +56,7 @@ export default class Bang extends Component {
       });
       if (roles[index] === 'Sheriff') {
         messagesRef.push({ name: '[SYSTEM]', text: `${participants[i].name} is the Sheriff!` });
+        database.ref(`${rid}/current`).child('player').update({ index: i });
       }
       roles.splice(index, 1);
       this.setState({ roles, participants });
@@ -48,7 +65,6 @@ export default class Bang extends Component {
     this.createBangCards();
     this.shuffleCards();
     this.dealCards();
-    this.loadHand();
   }
 
   shuffleCards() {
@@ -111,6 +127,32 @@ export default class Bang extends Component {
     this.setState({ deck });
   }
 
+  handleTurn() {
+    const { database, emailKey, participants, rid } = this.props;
+    const databaseRef = database.ref(`${rid}/current/player`);
+    databaseRef.off();
+    databaseRef.on('child_added', (data) => {
+      const val = data.val();
+      if (participants.length !== 0) {
+        if (participants[val].key === emailKey) {
+          this.setState({ myTurn: true });
+        } else {
+          this.setState({ myTurn: false });
+        }
+      }
+    });
+    databaseRef.on('child_changed', (data) => {
+      const val = data.val();
+      if (participants.length !== 0) {
+        if (participants[val].key === emailKey) {
+          this.setState({ myTurn: true });
+        } else {
+          this.setState({ myTurn: false });
+        }
+      }
+    });
+  }
+
   loadHand() {
     const { hand } = this.state;
     const { database, emailKey, rid } = this.props;
@@ -132,6 +174,16 @@ export default class Bang extends Component {
     });
   }
 
+  endTurn = () => {
+    const { database, rid, participants } = this.props;
+    const databaseRef = database.ref(`${rid}/current/player`);
+    databaseRef.once('value', (data) => {
+      const currentPlayer = data.val().index;
+      const nextPlayer = (currentPlayer + 1) % participants.length;
+      databaseRef.update({ index: nextPlayer });
+    });
+  }
+
   joinGame = () => {
     const { database, emailKey, rid, username } = this.props;
     const userRef = database.ref(`${rid}/participants/`).child(emailKey);
@@ -147,7 +199,7 @@ export default class Bang extends Component {
   }
 
   render() {
-    const { hand, joined, rolesAssigned } = this.state;
+    const { hand, joined, myTurn, rolesAssigned } = this.state;
     const { assign } = this.props;
     return (
       <div>
@@ -158,15 +210,21 @@ export default class Bang extends Component {
           Leave Game
         </Button>
         <Button
+          bsStyle="danger"
+          hidden={!myTurn}
+          onClick={this.endTurn}
+        >
+          End Turn
+        </Button>
+        <Button
           hidden={rolesAssigned}
           disabled={!assign}
-          type="submit"
           bsStyle="primary"
           onClick={this.assignRoles}
         >
           Assign Roles
         </Button>
-        <Hand items={hand} />
+        <Hand items={hand} myTurn={myTurn} />
       </div>
     );
   }

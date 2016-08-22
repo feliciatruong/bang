@@ -4,10 +4,11 @@ import { Button } from 'react-bootstrap';
 export default class Hand extends Component {
   static propTypes = {
     items: PropTypes.array,
+    myTurn: PropTypes.bool,
   }
 
   render() {
-    const { items } = this.props;
+    const { items, myTurn } = this.props;
     if (!items) {
       return null;
     }
@@ -18,7 +19,7 @@ export default class Hand extends Component {
             <div
               key={item.key}
             >
-              <Button>{item.name}</Button>
+              <Button disabled={!myTurn}>{item.name}</Button>
             </div>
         )}
       </ul>

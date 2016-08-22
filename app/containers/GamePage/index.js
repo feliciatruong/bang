@@ -44,10 +44,16 @@ export default class GamePage extends Component {
         username: user.displayName,
         emailKey: this.escapeEmailAddress(user.email),
         messages: [],
-        participants: [],
       });
-      const userRef = database.ref(`${rid}/participants/`).child(this.escapeEmailAddress(user.email));
-      userRef.update({ name: user.displayName });
+      const key = this.escapeEmailAddress(user.email);
+      const userRef = database.ref(`${rid}/participants/${key}`);
+      userRef.off();
+      database.ref(`${rid}`).once('value', (data) => {
+        const exists = data.child('participants').child(key).exists();
+        if (!exists) {
+          userRef.update({ name: user.displayName, order: new Date().valueOf() });
+        }
+      });
       this.loadMessages();
       this.loadParticipants();
     }
@@ -102,13 +108,20 @@ export default class GamePage extends Component {
     const { database, participants, rid } = this.state;
     const usersRef = database.ref(`${rid}/participants`);
     usersRef.off();
-    usersRef.on('child_added', (data) => {
+    usersRef.orderByChild('order').on('child_added', (data) => {
       const val = data.val();
-      participants.push({ key: data.key, name: val.name, role: '', health: 5, hand: [] });
+      participants.push({
+        key: data.key,
+        name: val.name,
+        role: val.role,
+        health: 5,
+        hand: [],
+        order: val.order,
+      });
       const num = participants.length;
       this.setState({ participants, totalPlayers: num, assign: num >= 3 });
     });
-    usersRef.on('child_removed', (data) => {
+    usersRef.orderByChild('order').on('child_removed', (data) => {
       for (let i = 0; i < participants.length; i++) {
         if (participants[i].key === data.key) {
           participants.splice(i, 1);
@@ -128,7 +141,7 @@ export default class GamePage extends Component {
   }
 
   render() {
-    const { assign, database, emailKey, message, messages, participants, rid, username } = this.state;
+    const { auth, assign, database, emailKey, message, messages, participants, rid, username } = this.state;
     return (
       <div>
         <h3>Game Page</h3>
@@ -164,6 +177,7 @@ export default class GamePage extends Component {
             </FormGroup>
           </form>
           <Bang
+            auth={auth}
             assign={assign}
             database={database}
             emailKey={emailKey}
