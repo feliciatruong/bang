@@ -85,6 +85,7 @@ export default class Bang extends Component {
     const { deck } = this.state;
     const { database, participants, rid } = this.props;
     const usersRef = database.ref(`${rid}/participants`);
+    console.log(participants);
     for (let i = 0; i < 5; i++) {
       for (let j = 0; j < participants.length; j++) {
         participants[j].hand.push(deck.pop());
@@ -130,10 +131,10 @@ export default class Bang extends Component {
   handleTurn() {
     const { database, emailKey, participants, rid } = this.props;
     const databaseRef = database.ref(`${rid}/current/player`);
+    databaseRef.off();
     databaseRef.on('child_added', (data) => {
       const val = data.val();
-      const exists = data.exists();
-      if (exists) {
+      if (participants.length !== 0) {
         if (participants[val].key === emailKey) {
           this.setState({ myTurn: true });
         } else {
@@ -143,8 +144,7 @@ export default class Bang extends Component {
     });
     databaseRef.on('child_changed', (data) => {
       const val = data.val();
-      const exists = data.exists();
-      if (exists) {
+      if (participants.length !== 0) {
         if (participants[val].key === emailKey) {
           this.setState({ myTurn: true });
         } else {
