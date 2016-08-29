@@ -65,6 +65,7 @@ export default class Bang extends Component {
     this.createBangCards();
     this.shuffleCards();
     this.dealCards();
+    this.drawCards();
   }
 
   shuffleCards() {
@@ -79,6 +80,21 @@ export default class Bang extends Component {
     this.setState({ deck });
     database.ref(`${rid}/cards`).set(deck);
     database.ref(`${rid}/hand`).remove();
+  }
+
+  drawCards() {
+    const { deck } = this.state;
+    const { database, participants, rid } = this.props;
+    const usersRef = database.ref(`${rid}/participants`);
+    const databaseRef = database.ref(`${rid}/current/player`);
+    databaseRef.once('value', (data) => {
+      const currentPlayer = data.val().index;
+      for (let i = 0; i < 2; i++) {
+        participants[currentPlayer].hand.push(deck.pop());
+      }
+      const userRef = usersRef.child(participants[currentPlayer].key);
+      userRef.update({ hand: participants[currentPlayer].hand });
+    });
   }
 
   dealCards() {
@@ -162,7 +178,7 @@ export default class Bang extends Component {
     userRef.on('child_removed', (data) => {
       const val = data.val();
       for (let i = 0; i < hand.length; i++) {
-        if (hand[i].name === val.name) {
+        if (hand[i].name === val.name && hand[i].key === data.key) {
           hand.splice(i, 1);
           this.setState({ hand });
         }
@@ -178,6 +194,7 @@ export default class Bang extends Component {
       const nextPlayer = (currentPlayer + 1) % participants.length;
       databaseRef.update({ index: nextPlayer, key: participants[nextPlayer].key });
     });
+    this.drawCards();
   }
 
   joinGame = () => {
@@ -194,9 +211,10 @@ export default class Bang extends Component {
     this.setState({ joined: true });
   }
 
+
   render() {
     const { hand, joined, myTurn, rolesAssigned } = this.state;
-    const { assign } = this.props;
+    const { assign, database, emailKey, participants, rid } = this.props;
     return (
       <div>
         <Button hidden={!joined} onClick={this.joinGame}>
@@ -220,7 +238,14 @@ export default class Bang extends Component {
         >
           Assign Roles
         </Button>
-        <Hand items={hand} myTurn={myTurn} />
+        <Hand
+          database={database}
+          emailKey={emailKey}
+          items={hand}
+          participants={participants}
+          myTurn={myTurn}
+          rid={rid}
+        />
       </div>
     );
   }
